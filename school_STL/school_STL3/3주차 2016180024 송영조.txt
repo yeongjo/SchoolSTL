@@ -1,0 +1,140 @@
+3주 1주차 =================================================
+
+#include <iostream>
+#include <string>
+#include <random>
+#include <fstream>
+#include <algorithm>
+
+#define SIZE 1'0000
+
+using namespace std;
+
+int gid{};
+
+default_random_engine dre;
+uniform_int_distribution<int> uidAge(1, 12);
+uniform_int_distribution<int> uidName('a', 'z');
+uniform_int_distribution<int> uidNameLen(3, 15);
+
+class Dog {
+	string name; // 이름 - 15글자까지만 허용
+	int age; // 나이
+	int id; // 생성 시 결정되는 고유의 숫자로 된 id
+public:
+	Dog() : id{ ++gid } {
+		int len = uidNameLen(dre);
+		for (int i = 0; i < len; ++i)
+			name += uidName(dre);
+		name += '\0';
+		age = uidAge(dre);
+	}
+	Dog(string name, int age) : name{ name }, age{ age }, id(++gid) {
+	}
+	//Dog(const Dog& rhs) {
+	//	cout << "hi";
+	//	name = rhs.name;
+	//}
+	//Dog(Dog&& rhs) {
+	//	name = 
+	//}
+	const string& getName() const { return name; }
+	friend ostream& operator<<(ostream&, const Dog&);
+	friend istream& operator>>(istream&, Dog&);
+};
+
+void printDogs(Dog* arr, int size) {
+	for (int i = 0; i < size; ++i)
+	{
+		cout << arr[i] << endl;
+	}
+}
+
+
+class alignas(64) A {
+	int a, b;
+	string t;
+};
+
+int main()
+{
+	ofstream out("Dog만마리", ios::binary);
+	for (int i = 0; i < SIZE; ++i) {
+		Dog d;
+		//dogs[i] = d;
+		out.write((char*)&d, sizeof(Dog));
+	}
+
+	out.close();
+
+	cout << "Dog의 메모리 크기: " << sizeof(Dog) << endl;
+	cout << "A의 메모리 크기: " << sizeof(A) << endl;
+
+
+	ifstream in("Dog만마리", ios::binary);
+	if (!in)
+		cout << "열지못함" << endl;
+
+	Dog dogs[SIZE];
+
+
+	//[문제1]
+	for (int i = 0; i < SIZE; ++i)
+	{
+		Dog d;
+		in >> d;
+		dogs[i] = d;
+	}
+
+	//printDogs(dogs, SIZE);
+
+	std::sort(dogs, dogs+SIZE, [](Dog& a, Dog& b)->bool {
+		return a.getName() < b.getName(); });
+
+	cout << "===================================== \n";
+	//[문제2]
+	printDogs(dogs, SIZE);
+
+
+	//[문제3]
+	cout << "===================가장처음================== \n";
+	cout << dogs[0] << endl;
+	cout << "===================가장끝================== \n";
+	cout << dogs[SIZE-1] << endl;
+
+	//================== = 가장처음==================
+	//aabazxn, 6, 27734
+	//================== = 가장끝==================
+	//zztbqysblbuwkgk, 5, 26009
+	
+	in.close();
+}
+
+ostream& operator<<(ostream& os, const Dog& dog)
+{
+	os << dog.name << ", " << dog.age << ", " << dog.id;
+	return os;
+}
+
+istream & operator>>(istream & is, Dog & dog)
+{
+	/*char t[256];
+	is.getline(t, 256);*/
+	//cout << "a";
+	is >> dog.name >> dog.age >> dog.id;
+	return is;
+}
+
+
+
+
+
+
+
+3주 2주차 =================================================
+
+[문제1]
+unique_ptr은 Dog* 단일객체의 포인터만 관리하는데 Dog의 배열을 넘겨서 dogs[1], dogs[2]는 메모리 해제가 안된다.
+
+[문제2]
+unique_ptr<Dog[]> dogs(new Dog[3]);
